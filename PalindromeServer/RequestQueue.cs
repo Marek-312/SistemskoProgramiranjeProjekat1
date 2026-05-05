@@ -25,4 +25,34 @@ internal sealed class RequestQueue
         }
 
     }
+    public HttpListenerContext? Dequeue()
+    {
+        lock(lockObj)
+        {
+            while(queue.Count==0)
+            {
+                if(completed)
+                {
+                    return null;
+                }
+                Console.WriteLine("[QUEUE] Red je prazna!");
+                if(!Monitor.Wait(lockObj, TimeSpan.FromSeconds(30)))
+                {
+                    throw new Exception("Cekanje je predugo");
+                }
+            }
+                var ctx=queue.Dequeue();
+                Console.WriteLine("[QUEUE] Uzimam zahtev iz reda!");
+                Monitor.PulseAll(lockObj);
+                return ctx;
+        }
+    }
+    public void Complete()
+    {
+        lock(lockObj)
+        {
+            completed=true;
+            Monitor.PulseAll(lockObj);
+        }
+    }
 }
