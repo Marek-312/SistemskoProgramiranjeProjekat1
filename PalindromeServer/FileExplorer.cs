@@ -33,5 +33,22 @@ namespace PalindromeServer
             }
             return true;
         }
+        private static int CountPalindromes(string filePath)
+        {
+            Thread.Sleep(5000);//Dodato zbog testa
+            int count=0;
+            foreach(string line in File.ReadLines(filePath))
+            {
+                string[]words=line.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
+                foreach(string w in words)
+                {
+                    if(IsPalindrome(w))
+                    {
+                        count++;
+                    }
+                }
+            }
+            return count;
+        }
     }
 }
