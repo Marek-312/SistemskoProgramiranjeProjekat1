@@ -1,3 +1,6 @@
+using System.Net;
+using System.Text;
+
 namespace PalindromeServer
 {
     internal sealed class FileExplorer
@@ -49,6 +52,15 @@ namespace PalindromeServer
                 }
             }
             return count;
+        }
+        private static void SendResponse(HttpListenerResponse response, int statusCode, string body)
+        {
+            byte[]buffer=Encoding.UTF8.GetBytes(body);
+            response.StatusCode=statusCode;
+            response.ContentType="text/plain; charset=utf-8";
+            response.ContentLength64=buffer.Length;
+            using Stream output=response.OutputStream;
+            output.Write(buffer, 0, buffer.Length);
         }
     }
 }
