@@ -83,7 +83,7 @@ namespace PalindromeServer
                     return;
                 }
                 string safeFileName=Path.GetFileName(fileName);
-                if(safeFileName=="favicon.iso")
+                if(safeFileName=="favicon.ico")
                 {
                     response.Close();
                     return;
