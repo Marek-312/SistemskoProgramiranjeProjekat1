@@ -62,5 +62,49 @@ namespace PalindromeServer
             using Stream output=response.OutputStream;
             output.Write(buffer, 0, buffer.Length);
         }
+
+        public void ThreadedFileSearch(object? request)
+        {
+            if(request is not HttpListenerContext context)
+            {
+                logger.Log("Los zahtev");
+                return;
+            }
+            HttpListenerResponse response=context.Response;
+            string rawPath=context.Request.Url?.AbsolutePath ?? string.Empty;
+            string fileName=rawPath.TrimStart('/');
+            logger.Log("Zahtev je primljen", fileName.Length>0?fileName:"unknown");
+        /*    try
+            {
+                if(string.IsNullOrWhiteSpace(fileName))
+                {
+                    logger.Log("Nedostaje naziv fajla!");
+                    SendResponse(response, (int)HttpStatusCode.BadRequest, "Nedostaje naziv fajla");
+                    return;
+                }
+                string safeFileName=Path.GetFileName(fileName);
+                if(safeFileName=="favicon.iso")
+                {
+                    response.Close();
+                    return;
+                }
+                if(cache.TryGet(safeFileName, out int cached))
+                {
+                    logger.Log("Vracamo iz kesa!", safeFileName);
+                }
+            }
+            catch()*/
+        }
+        private void SendPalindromeResponse(HttpListenerResponse response, string safeFileName, int count)
+        {
+            if(count==0)
+            {
+                SendResponse(response, (int)HttpStatusCode.OK, $"Fajl {safeFileName} ne sadrzi ni jednu rec koja je palindrom!");
+            }
+            else
+            {
+                SendResponse(response, (int)HttpStatusCode.OK, $"Fajl {safeFileName} sadrzi {count} palindroma!");
+            }
+        }
     }
 }
