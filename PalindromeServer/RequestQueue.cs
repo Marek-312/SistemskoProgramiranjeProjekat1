@@ -36,10 +36,7 @@ internal sealed class RequestQueue
                     return null;
                 }
                 Console.WriteLine("[QUEUE] Red je prazna!");
-                if(!Monitor.Wait(lockObj, TimeSpan.FromSeconds(30)))
-                {
-                    throw new Exception("Cekanje je predugo");
-                }
+                Monitor.Wait(lockObj, TimeSpan.FromSeconds(30));
             }
                 var ctx=queue.Dequeue();
                 Console.WriteLine("[QUEUE] Uzimam zahtev iz reda!");
