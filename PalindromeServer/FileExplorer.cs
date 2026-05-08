@@ -145,7 +145,7 @@ namespace PalindromeServer
                     }
                     int count=CountPalindromes(filePath);
                     cache.Set(safeFileName, count);
-                    logger.Log($"Uspesno sacuvano u kesu, velicina je: {cache.Count}");
+                    logger.Log($"Uspesno sacuvano u kesu, velicina je: {cache.Count}", safeFileName);
                     SendPalindromeResponse(response, safeFileName, count);
                 }
                 catch(Exception ex)
