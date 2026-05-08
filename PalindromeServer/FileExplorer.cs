@@ -74,7 +74,7 @@ namespace PalindromeServer
             string rawPath=context.Request.Url?.AbsolutePath ?? string.Empty;
             string fileName=rawPath.TrimStart('/');
             logger.Log("Zahtev je primljen", fileName.Length>0?fileName:"unknown");
-        /*    try
+           try
             {
                 if(string.IsNullOrWhiteSpace(fileName))
                 {
@@ -91,9 +91,84 @@ namespace PalindromeServer
                 if(cache.TryGet(safeFileName, out int cached))
                 {
                     logger.Log("Vracamo iz kesa!", safeFileName);
+                    SendPalindromeResponse(response, safeFileName, cached);
+                    return;
+                }
+                bool shouldWork=false;
+                lock(progressLock)
+                {
+                    if(!inProgress.ContainsKey(safeFileName))
+                    {
+                        inProgress[safeFileName]=new object();
+                        shouldWork=true;
+                        logger.Log("Cache Miss! Preuzimamo obradu!", safeFileName);
+                    }
+                    else
+                    {
+                        logger.Log("Obrada je u toku-cekam!", safeFileName);
+                        shouldWork=false;
+                    }
+                }
+                if(shouldWork==false)
+                {
+                    logger.Log("Cekam da se obrada zavrsi", safeFileName);
+                    lock(progressLock)
+                    {
+                        while(inProgress.ContainsKey(safeFileName))
+                        {
+                            Monitor.Wait(progressLock);
+                        }
+                    }
+                    if(cache.TryGet(safeFileName, out int cachedCount))
+                    {
+                        logger.Log("Cache Hit-druga nit je odradila posao");
+                        SendPalindromeResponse(response, safeFileName, cachedCount);
+                    }
+                    else
+                    {
+                        logger.Log("Worker nit nije uspela", safeFileName);
+                        SendResponse(response, (int)HttpStatusCode.InternalServerError, "Greska pri obradi!");
+                    }
+                    return;
+                }
+                logger.Log("Cekamo semafor", safeFileName);
+                semaphore.Wait();
+                logger.Log("Pocinje obrada: ", safeFileName);
+                try
+                {
+                    string? filePath=Directory.EnumerateFiles(rootDirectory, safeFileName, SearchOption.AllDirectories).FirstOrDefault();
+                    if(filePath==null)
+                    {
+                        logger.Log("Fajl nije pronadjen", safeFileName);
+                        SendResponse(response, (int)HttpStatusCode.NotFound, $"Fajl {safeFileName} nije pronadjen!");
+                        return;
+                    }
+                    int count=CountPalindromes(filePath);
+                    cache.Set(safeFileName, count);
+                    logger.Log($"Uspesno sacuvano u kesu, velicina je: {cache.Count}");
+                    SendPalindromeResponse(response, safeFileName, count);
+                }
+                catch(Exception ex)
+                {
+                    logger.Log($"Greska pri obradi: {ex.Message}", safeFileName);
+                    SendResponse(response, (int)HttpStatusCode.InternalServerError, "Greska pri obradi!");
+                }
+                finally
+                {
+                    semaphore.Release();
+                    logger.Log("Semafor je slobodan!", safeFileName);
+                    lock(progressLock)
+                    {
+                        inProgress.Remove(safeFileName);
+                        Monitor.PulseAll(progressLock);
+                    }
                 }
             }
-            catch()*/
+            catch(Exception ex)
+            {
+                logger.Log($"GRESKA: {ex.Message}");
+                SendResponse(response, (int)HttpStatusCode.InternalServerError, "Interna greska!");
+            }
         }
         private void SendPalindromeResponse(HttpListenerResponse response, string safeFileName, int count)
         {
