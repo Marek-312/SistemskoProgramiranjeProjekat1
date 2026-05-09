@@ -121,7 +121,7 @@ namespace PalindromeServer
                     }
                     if(cache.TryGet(safeFileName, out int cachedCount))
                     {
-                        logger.Log("Cache Hit-druga nit je odradila posao");
+                        logger.Log("Cache Hit-druga nit je odradila posao", safeFileName);
                         SendPalindromeResponse(response, safeFileName, cachedCount);
                     }
                     else
